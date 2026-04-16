@@ -1,0 +1,41 @@
+processPlugins:
+- name: dsf-process-allow-list
+  repositoryUrl: https://github.com/datasharingframework/dsf-process-allow-list
+  version:
+  - 1.0.0.1
+  excludedProcesses:
+  - dsfdev_updateAllowList|1.0
+
+- name: dsf-process-ping-pong
+  repositoryUrl: https://github.com/datasharingframework/dsf-process-ping-pong
+  version:
+  - 1.0.1.0
+  - 2.0.0.2
+
+- name: mii-process-feasibility
+  repositoryUrl: https://github.com/medizininformatik-initiative/mii-process-feasibility
+  version:
+  - 1.0.0.11
+  excludedProcesses:
+  - medizininformatik-initiativede_feasibilityRequest|1.0
+
+- name: mii-process-report
+  repositoryUrl: https://github.com/medizininformatik-initiative/mii-process-report
+  version:
+  - 2.0.0.0
+  excludedProcesses:
+  - medizininformatik-initiativede_reportReceive|2.0
+
+- name: mii-process-data-sharing
+  repositoryUrl: https://github.com/medizininformatik-initiative/mii-process-data-sharing
+  version:
+  - 1.1.0.0
+  excludedProcesses:
+  - medizininformatik-initiativede_coordinateDataSharing|1.1
+  - medizininformatik-initiativede_mergeDataSharing|1.1
+
+- name: mii-process-data-transfer
+  repositoryUrl: https://github.com/medizininformatik-initiative/mii-process-data-transfer
+  version:
+  - 1.1.0.1
+

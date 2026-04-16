@@ -7,4 +7,8 @@ labels:
   pairs:
     app.kubernetes.io/component: server
 
-resources: [ ]
+resources:
+- depl.yml
+- svc.yml
+- ing.yml
+- netpol.egress.fdpg-mailbox.allow.yaml

@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: fdpg-mailbox-db
+spec:
+  selector: { }
+  serviceName: fdpg-mailbox-db
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app.life.uni-leipzig.de/redundancy: none
+        app.life.uni-leipzig.de/service-level: silver
+    spec:
+      enableServiceLinks: false
+      containers:
+      - name: postgres
+        image: postgres:18-alpine
+        ports:
+        - name: postgres
+          containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: fhir
+        - name: POSTGRES_USER
+          value: liquibase_user
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: FDPG_DSF_MAILBOX_DB_LIQUIBASE_PASSWORD
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql
+        startupProbe:
+          exec:
+            command: [ "pg_isready", "-U", "$(POSTGRES_USER)", "-d", "fhir" ]
+          failureThreshold: 24
+          periodSeconds: 10
+        readinessProbe: &probe
+          exec:
+            command: [ "pg_isready", "-U", "$(POSTGRES_USER)", "-d", "fhir" ]
+        livenessProbe: *probe
+        resources:
+          requests:
+            cpu: "125m"
+            memory: "1Gi"
+          limits:
+            memory: "1Gi"
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      storageClassName: vsan
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 5Gi

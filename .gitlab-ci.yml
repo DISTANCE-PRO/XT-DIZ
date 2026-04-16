@@ -52,21 +52,25 @@ tf/validate:
 
 .app/apply:
   needs: [ deidentifhir/merge ]
+  variables:
   before_script:
-  - kustomize edit add secret credentials
-    --from-literal=$(./genpassenv.sh CD_HDS_BACKEND_AUTH_CLIENT_SECRET)
-    --from-literal=$(./genpassenv.sh CD_HDS_FRONTEND_AUTH_CLIENT_SECRET)
-    --from-literal=$(./genpassenv.sh CD_HDS_FRONTEND_AUTH_SECRET)
-    --from-literal=$(./genpassenv.sh RD_HDS_BACKEND_AUTH_CLIENT_SECRET)
-    --from-literal=$(./genpassenv.sh RD_HDS_FRONTEND_AUTH_CLIENT_SECRET)
-    --from-literal=$(./genpassenv.sh RD_HDS_FRONTEND_AUTH_SECRET)
-    --from-literal=$(./genpassenv.sh CD_FTS_AGENT_CLIENT_SECRET)
-    --from-literal=$(./genpassenv.sh CD_FTS_TC_CLIENT_SECRET)
-    --from-literal=$(./genpassenv.sh RD_FTS_AGENT_CLIENT_SECRET)
-    --from-literal=$(./genpassenv.sh RD_FTS_TC_CLIENT_SECRET)
-    --from-literal=$(./genpassenv.sh FTS_SCHEDULER_CLIENT_SECRET)
+  - apk add glab openssl
+  - ./.gitlab-ci/generate-process-env.sh
+  - ./.gitlab-ci/download-secrets.sh "$DIZ_NAME" .secrets/certs
+  - ./.gitlab-ci/generate-thumbprints.sh .secrets/certs .secrets/thumbprints
+  - ./.gitlab-ci/create-credentials-env.sh .secrets/credentials.env
+  - kustomize edit add secret credentials 
+    --from-env-file=.secrets/credentials.env
+  - kustomize edit add secret fdpg-dsf-creds
+    --from-file=cert=.secrets/certs/fdpg-dsf-client-cert.pem
+    --from-file=pkey=.secrets/certs/fdpg-dsf-private-key.pem
+  - kustomize edit add secret rp-dsf-creds
+    --from-file=cert=.secrets/certs/rp-dsf-client-cert.pem
+    --from-file=pkey=.secrets/certs/rp-dsf-private-key.pem
+    --from-file=thumbprints=.secrets/thumbprints
 
-# Validate with a fixed placeholder so the job doesn't need real DIZ credentials.
+
+# Validate with a fixed placeholder DIZ and its matching secure files.
 app/validate:
   variables:
     DIZ_NAME: test-1
@@ -92,3 +96,4 @@ app/deploy:prod:
   - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   - if: $CI_MERGE_REQUEST_LABELS =~ /hint::autodeploy/
   - when: manual
+  resource_group: production

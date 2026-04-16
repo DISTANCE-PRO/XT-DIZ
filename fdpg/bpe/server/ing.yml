@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fdpg-bpe-server
+spec:
+  rules:
+  - host: fdpg-bpe.${DIZ_NAME}.distance-xt.life.uni-leipzig.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: fdpg-bpe-server
+            port:
+              name: http
