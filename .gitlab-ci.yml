@@ -1,0 +1,38 @@
+include:
+- component: $CI_SERVER_FQDN/util/k8s-ci/kustomize@0.3.1
+  inputs:
+    prune: [ core/v1/Secret, core/v1/ConfigMap,
+             apps/v1/StatefulSet, apps/v1/Deployment,
+             core/v1/Service, networking.k8s.io/v1/Ingress,
+             networking.k8s.io/v1/NetworkPolicy ]
+
+# Per-DIZ secrets live in a single environment-scoped file-type CI/CD variable
+# `CREDENTIALS_FILE` (one scope per DIZ_NAME). Dotenv format, one KEY=VALUE per
+# line — see README.md for the expected keys.
+.app/apply:
+  before_script:
+  - cp "$CREDENTIALS_FILE" credentials.env
+  - kustomize edit add secret credentials --from-env-file=credentials.env
+
+# Validate with a fixed placeholder so the job doesn't need real DIZ credentials.
+app/validate:
+  variables:
+    DIZ_NAME: test-1
+    CI_ENVIRONMENT_SLUG: res
+
+app/deploy:test:
+  rules:
+  - when: never
+
+app/deploy:prod:
+  parallel:
+    matrix:
+    - DIZ_NAME: [ test-1 ]
+  environment:
+    name: $DIZ_NAME
+  variables:
+    CI_ENVIRONMENT_SLUG: res
+  rules:
+  - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  - if: $CI_MERGE_REQUEST_LABELS =~ /hint::autodeploy/
+  - when: manual
