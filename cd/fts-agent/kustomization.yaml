@@ -8,6 +8,4 @@ labels:
     app.kubernetes.io/name: fts
     app.kubernetes.io/component: cd-agent
 
-resources:
-- depl.yml
-- svc.yml
+resources: [ ]

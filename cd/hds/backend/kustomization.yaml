@@ -7,7 +7,4 @@ labels:
   pairs:
     app.kubernetes.io/component: backend
 
-resources:
-- sts.yml
-- svc.yml
-- ing.yml
+resources: [ ]
