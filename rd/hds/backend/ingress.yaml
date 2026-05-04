@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: backend
+  annotations:
+    nginx.ingress.kubernetes.io/server-snippet: |
+      # Compression config
+      gzip on;
+      gzip_types application/json application/fhir+json;
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-by-header: "Authorization"
+    nginx.ingress.kubernetes.io/canary-by-header-pattern: "^Bearer"
+spec:
+  rules:
+  - host: rd.${DIZ_NAME}.distance-xt.life.uni-leipzig.local
+    http:
+      paths:
+      - path: /fhir
+        pathType: Prefix
+        backend:
+          service:
+            name: backend
+            port:
+              name: http

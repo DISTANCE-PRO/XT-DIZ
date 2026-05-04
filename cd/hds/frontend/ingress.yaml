@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: frontend
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
+    nginx.ingress.kubernetes.io/server-snippet: |
+      # Compression config
+      gzip on;
+      gzip_types text/html text/javascript text/css application/json application/fhir+json;
+
+      # Security related headers
+      add_header X-Content-Type-Options nosniff;
+spec:
+  rules:
+  - host: cd.${DIZ_NAME}.distance-xt.life.uni-leipzig.local
+    http:
+      paths:
+      - path: /fhir
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              name: http

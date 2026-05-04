@@ -1,2 +1,3 @@
 /.agent
+/.terraform
 credentials.env

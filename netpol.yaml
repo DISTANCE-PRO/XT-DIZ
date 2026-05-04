@@ -1,0 +1,13 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-services
+spec:
+  podSelector: { }
+  policyTypes: [ Egress ]
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 172.18.50.204/32 # prod-lb
+    ports:
+    - port: 443

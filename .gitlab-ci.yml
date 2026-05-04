@@ -5,13 +5,20 @@ include:
              apps/v1/StatefulSet, apps/v1/Deployment,
              core/v1/Service, networking.k8s.io/v1/Ingress,
              networking.k8s.io/v1/NetworkPolicy ]
+    envsubst: [ DIZ_NAME ]
+- component: ${CI_SERVER_FQDN}/util/terraform-component/validate@main
+  inputs:
+    stage: test
+- component: ${CI_SERVER_FQDN}/util/terraform-component/plan@main
+  inputs:
+    stage: deploy
 
 # Per-DIZ secrets live in a single environment-scoped file-type CI/CD variable
 # `CREDENTIALS_FILE` (one scope per DIZ_NAME). Dotenv format, one KEY=VALUE per
 # line — see README.md for the expected keys.
 .app/apply:
   before_script:
-  - cp "$CREDENTIALS_FILE" credentials.env
+  - cp "${CREDENTIALS_FILE}" credentials.env
   - kustomize edit add secret credentials --from-env-file=credentials.env
 
 # Validate with a fixed placeholder so the job doesn't need real DIZ credentials.
@@ -23,10 +30,14 @@ app/deploy:test:
   rules:
   - when: never
 
+# DIZ names, also consumed by terraform
+.dizs: &dizs
+- test-1
+
 app/deploy:prod:
   parallel:
     matrix:
-    - DIZ_NAME: [ test-1 ]
+    - DIZ_NAME: *dizs
   environment:
     # We use a fixed KUBE_CLUSTER from CI/CD variables,
     # so we can use the DIZ name as the environment
