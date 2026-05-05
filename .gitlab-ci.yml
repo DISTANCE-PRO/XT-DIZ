@@ -18,7 +18,6 @@ include:
 app/validate:
   variables:
     DIZ_NAME: test-1
-    CI_ENVIRONMENT_SLUG: res
 
 app/deploy:test:
   rules:
@@ -29,9 +28,9 @@ app/deploy:prod:
     matrix:
     - DIZ_NAME: [ test-1 ]
   environment:
+    # We use a fixed KUBE_CLUSTER from CI/CD variables,
+    # so we can use the DIZ name as the environment
     name: $DIZ_NAME
-  variables:
-    CI_ENVIRONMENT_SLUG: res
   rules:
   - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   - if: $CI_MERGE_REQUEST_LABELS =~ /hint::autodeploy/
