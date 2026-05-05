@@ -1,75 +1,46 @@
-# distance-xt-diz
+# DISTANCE:PRO XT — Data Integration Center (DIZ)
 
-Per-site application for a single DIZ (Daten-Integrations-Zentrum) in the
-distance-xt platform.
+Per-site application deployed once for each rollout partner in the DISTANCE:PRO XT network.
 
-Namespace: `distance-xt-diz-<site>`
+## Introduction
 
-One instance of this repo is deployed per participating site. It consumes the
-shared `distance-xt-core` (Keycloak, terminology server) and
-`distance-xt-trust-center` (gICS, gPAS, tc-agent) services.
+Each rollout partner gets its own DIZ instance. The DIZ manages the full lifecycle of clinical research data:
+ingestion into a clinical FHIR store, pseudonymization via the shared trust center, and storage of de-identified data in
+a separate research FHIR store. Cross-site communication happens through the DSF (Data Sharing Framework) messaging
+layer.
 
-## Overview
+![Architecture](architecture.png)
 
-![Diagram](architecture.png)
+## Services
 
-## Components
+| Service                      | Technology                                                           | Role                                                                    |
+|------------------------------|----------------------------------------------------------------------|-------------------------------------------------------------------------|
+| Clinical Domain FHIR Store   | [Blaze](https://github.com/samply/blaze)                             | Stores original clinical FHIR data, with web frontend                   |
+| Research Domain FHIR Store   | [Blaze](https://github.com/samply/blaze)                             | Stores pseudonymized research data, with web frontend                   |
+| Clinical Domain Agent        | [FTS-next](https://github.com/medizininformatik-initiative/fts-next) | Reads clinical data, coordinates pseudonymization with the trust center |
+| Research Domain Agent        | [FTS-next](https://github.com/medizininformatik-initiative/fts-next) | Receives and stores pseudonymized data                                  |
+| FDPG Mailbox                 | [DSF FHIR Server](https://github.com/datasharingframework)           | Externally reachable endpoint for cross-site FHIR messaging             |
+| FDPG Business Process Engine | [DSF BPE](https://github.com/datasharingframework)                   | Workflow coordination for multi-site processes                          |
+| Rollout Partner Mailbox      | DSF FHIR Server                                                      | Internal message exchange with the rollout partner                      |
 
-- **rp/mailbox** — Rollout Partner DSF Mailbox for data exchange.
-  Internal `.local` zone only.
-- **cd/hds** — Blaze FHIR server for the Clinical Domain (CD-HDS) + frontend.
-  - `https://fhir-cd.${DIZ_NAME}.distance-xt.life.uni-leipzig.local`
-- **cd/fts-agent** — FTS-next clinical-domain agent. Reads from CD-HDS,
-  coordinates with tc-agent, pushes pseudonymized data to rd-agent.
-- **rd/hds** — Blaze FHIR server for the Research Domain (RD-HDS) + frontend.
-  `ENFORCE_REFERENTIAL_INTEGRITY=false` as required by FTS-next.
-  - `https://fhir-rd.${DIZ_NAME}.distance-xt.life.uni-leipzig.local`
-- **rd/fts-agent** — FTS-next research-domain agent. Receives pseudonymized
-  data and stores it in RD-HDS.
-- **fdpg/bpe** — FDPG Medical Business Process Engine for workflow coordination.
-- **fdpg/mailbox** — DSF FHIR server (mailbox) + PostgreSQL. The **only
-  externally reachable** service in the DIZ; all others use the internal
-  `.local` zone.
-  - `https://${DIZ_NAME}.distance-xt.life.uni-leipzig.de/fhir` (public `.de`)
+## Data Flow
 
-## Site-specific configuration
+1. Clinical data is loaded into the **Clinical Domain FHIR Store**
+2. The **Clinical Domain Agent** extracts data and coordinates with the trust center for consent checks and
+   pseudonymization
+3. Pseudonymized data is delivered to the **Research Domain Agent**
+4. The agent stores de-identified records in the **Research Domain FHIR Store**
+5. Cross-site queries and data sharing happen through the **DSF** messaging layer (FDPG Mailbox + BPE)
 
-`${DIZ_NAME}` is substituted by the CI pipeline (envsubst) from the
-`DIZ_NAME` matrix variable. The value is the site slug, e.g. `test-1`.
+## Multi-Site Deployment
 
-## Required CI variables
+One instance of this repository is deployed per rollout partner. Site-specific configuration (hostnames,
+secrets) is injected at deployment time via CI/CD variables.
 
-Per-DIZ secrets live in a single **file-type** CI/CD variable
-`CREDENTIALS_FILE`, environment-scoped (one scope per `DIZ_NAME`). Dotenv
-format — `KEY=VALUE` per line, no quoting, no multi-line values.
-`.app/apply` copies it to `credentials.env` and feeds it to
-`kustomize edit add secret credentials --from-env-file=…`, producing a k8s
-`Secret` with one data key per line.
+## Architecture Context
 
-Expected keys:
+This is one of three repositories that make up the DISTANCE:PRO XT platform:
 
-| Key                              | Purpose                                     |
-|----------------------------------|---------------------------------------------|
-| `CD_FRONTEND_AUTH_CLIENT_SECRET` | OIDC client secret for Blaze CD frontend    |
-| `CD_FRONTEND_AUTH_SECRET`        | Random session secret for Blaze CD frontend |
-| `RD_FRONTEND_AUTH_CLIENT_SECRET` | OIDC client secret for Blaze RD frontend    |
-| `RD_FRONTEND_AUTH_SECRET`        | Random session secret for Blaze RD frontend |
-| `CD_AGENT_CLIENT_SECRET`         | OIDC client secret for FTS cd-agent         |
-| `RD_AGENT_CLIENT_SECRET`         | OIDC client secret for FTS rd-agent         |
-| `DSF_DB_LIQUIBASE_USER`          | DSF PostgreSQL migration user               |
-| `DSF_DB_LIQUIBASE_PASSWORD`      | DSF PostgreSQL migration password           |
-| `DSF_DB_USER`                    | DSF PostgreSQL runtime user                 |
-| `DSF_DB_PASSWORD`                | DSF PostgreSQL runtime password             |
-
-## Deploy
-
-Via the shared kustomize CI component (`util/k8s-ci/kustomize@0.3.1`). The
-`app/deploy:prod` job runs automatically on the default branch and on MRs
-labelled `hint::autodeploy`; otherwise it's manual.
-
-## Open items
-
-- DSF certificate / mTLS setup: CA bundle, server cert, role config.
-- Confirm tc-agent service name and namespace for cross-namespace URLs.
-- NetworkPolicy: restrict agent and DSF traffic to known peers only.
-- RD ↔ FDPG-test wiring (ask @mruehle).
+- **[core](../core)** — Shared terminology and authentication services
+- **[trust-center](../trust-center)** — Consent management and pseudonymization
+- **diz** (this repo) — Per-site data integration (one instance per rollout partner)
