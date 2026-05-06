@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: backend
+spec:
+  selector: {}
+  serviceName: backend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app.life.uni-leipzig.de/redundancy: none
+        app.life.uni-leipzig.de/service-level: silver
+    spec:
+      enableServiceLinks: false
+      containers:
+      - name: blaze
+        image: ghcr.io/samply/blaze:1.7.0@sha256:f2e87759605587eaf9cbbf86e229938019a732bb908d4e59f107a2744e73825f
+        ports:
+        - name: http
+          containerPort: 8080
+        - name: metrics
+          containerPort: 8081
+        env:
+        - name: JAVA_TOOL_OPTIONS
+          value: "-Xmx4g"
+        - name: ENABLE_ADMIN_API
+          value: "true"
+        - name: ENABLE_OPERATION_GRAPH
+          value: "true"
+        - name: DB_BLOCK_CACHE_SIZE
+          value: "1024"
+        - name: DB_RESOURCE_CACHE_SIZE
+          value: "5000"
+        - name: BASE_URL
+          value: "https://cd.${DIZ_NAME}.distance-xt.life.uni-leipzig.local"
+        - name: OPENID_PROVIDER_URL
+          value: "https://auth.distance-xt.life.uni-leipzig.local/realms/diz-${DIZ_NAME}"
+        - name: OPENID_PROVIDER_ISSUER
+          value: "https://auth.distance-xt.life.uni-leipzig.local/realms/diz-${DIZ_NAME}"
+        - name: OPENID_AUDIENCE
+          value: "cd-hds"
+        - name: EXTERN_TERMINOLOGY_SERVICE_URL
+          value: "https://tx.distance-xt.life.uni-leipzig.local/fhir"
+        - name: EXTERN_TERMINOLOGY_SERVICE_OPENID_PROVIDER_URL
+          value: "https://auth.distance-xt.life.uni-leipzig.local/realms/distance-xt"
+        - name: EXTERN_TERMINOLOGY_SERVICE_OPENID_CLIENT_ID
+          value: "DIZ:${DIZ_NAME}/cd-hds"
+        - name: EXTERN_TERMINOLOGY_SERVICE_OPENID_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: CD_HDS_BACKEND_AUTH_CLIENT_SECRET
+        - name: CQL_EXPR_CACHE_SIZE
+          value: "128"
+        - name: LOG_LEVEL
+          value: "info"
+        - name: USE_SYSTEM_CA_CERTS
+          value: "true"
+        volumeMounts:
+        - name: data
+          mountPath: /app/data
+        - name: tmp
+          mountPath: /tmp
+          subPath: tmp
+        - name: ca-certs
+          mountPath: /certificates
+          readOnly: true
+        startupProbe:
+          httpGet: &probe
+            path: /health
+            port: 8080
+          failureThreshold: 6
+        livenessProbe:
+          httpGet: *probe
+        readinessProbe:
+          httpGet: *probe
+        resources:
+          requests:
+            cpu: "125m"
+            memory: "6Gi"
+          limits:
+            memory: "6Gi"
+        securityContext:
+          runAsNonRoot: true
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+      volumes:
+      - name: tmp
+        emptyDir:
+          medium: Memory
+          sizeLimit: 64Mi
+      - name: ca-certs
+        configMap:
+          name: life-ca-certs
+          items:
+          - key: life-root-ca-2.pem
+            path: life-root-ca-2.crt
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      storageClassName: vsan
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Gi

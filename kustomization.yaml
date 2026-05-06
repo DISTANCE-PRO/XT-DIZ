@@ -12,3 +12,4 @@ resources:
 - cd/
 - rd/
 - fdpg/
+- netpol.yaml

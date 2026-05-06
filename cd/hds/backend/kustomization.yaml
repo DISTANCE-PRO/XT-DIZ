@@ -7,4 +7,7 @@ labels:
   pairs:
     app.kubernetes.io/component: backend
 
-resources: [ ]
+resources:
+- workload.yaml
+- service.yaml
+- ingress.yaml

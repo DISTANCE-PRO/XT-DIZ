@@ -44,3 +44,30 @@ This is one of three repositories that make up the DISTANCE:PRO XT platform:
 - **[core](../core)** — Shared terminology and authentication services
 - **[trust-center](../trust-center)** — Consent management and pseudonymization
 - **diz** (this repo) — Per-site data integration (one instance per rollout partner)
+
+## Keycloak Configuration (Terraform)
+
+Keycloak resources are managed as code using Terraform and the official [Keycloak provider][keycloak-provider].
+
+### Design
+
+Each DIZ provisions resources in **two realms**:
+
+| Realm | Managed by | Resources created by this repo |
+|---|---|---|
+| `diz-${DIZ_NAME}` (per-DIZ) | This repo (created here) | Realm, `cd-hds-frontend` and `rd-hds-frontend` clients, audience mappers, IdP broker config, auth flows |
+| `distance-xt` (shared) | [core](../core) (referenced via `data` source) | `DIZ:${DIZ_NAME}/cd-hds` and `DIZ:${DIZ_NAME}/rd-hds` service-account clients, `DIZ:${DIZ_NAME}/broker` client, audience mappers (`term-server`) |
+
+The per-DIZ realm handles user-facing authentication (Blaze frontends and backends).
+The central realm clients are used by Blaze backends to authenticate against the shared terminology server.
+
+### Identity Brokering
+
+Users are managed centrally in the core `distance-xt` realm. Each per-DIZ realm is configured
+with the core realm as an OIDC identity provider. A custom browser flow auto-redirects to the
+core realm -- there is no local login page. On first login, accounts are automatically created
+and linked in the per-DIZ realm.
+
+The set of DIZ instances is read from `.gitlab-ci.yml` so that Terraform and CI always stay in sync.
+
+[keycloak-provider]: https://registry.terraform.io/providers/keycloak/keycloak/latest/docs
