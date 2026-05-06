@@ -53,10 +53,10 @@ Keycloak resources are managed as code using Terraform and the official [Keycloa
 
 Each DIZ provisions resources in **two realms**:
 
-| Realm | Managed by | Resources created by this repo |
-|---|---|---|
-| `diz-${DIZ_NAME}` (per-DIZ) | This repo (created here) | Realm, `cd-hds-frontend` and `rd-hds-frontend` clients, audience mappers, IdP broker config, auth flows |
-| `distance-xt` (shared) | [core](../core) (referenced via `data` source) | `DIZ:${DIZ_NAME}/cd-hds` and `DIZ:${DIZ_NAME}/rd-hds` service-account clients, `DIZ:${DIZ_NAME}/broker` client, audience mappers (`term-server`) |
+| Realm                       | Managed by                                     | Resources created by this repo                                                                                                                   |
+|-----------------------------|------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| `diz-${DIZ_NAME}` (per-DIZ) | This repo (created here)                       | Realm, `cd-hds-frontend` and `rd-hds-frontend` clients, audience mappers, IdP broker config, auth flows                                          |
+| `distance-xt` (shared)      | [core](../core) (referenced via `data` source) | `DIZ:${DIZ_NAME}/cd-hds` and `DIZ:${DIZ_NAME}/rd-hds` service-account clients, `DIZ:${DIZ_NAME}/broker` client, audience mappers (`term-server`) |
 
 The per-DIZ realm handles user-facing authentication (Blaze frontends and backends).
 The central realm clients are used by Blaze backends to authenticate against the shared terminology server.
