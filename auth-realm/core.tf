@@ -38,3 +38,33 @@ resource "keycloak_openid_audience_protocol_mapper" "core_rd_hds_audience" {
   name                     = keycloak_openid_client.core_rd_hds.client_id
   included_custom_audience = "term-server"
 }
+
+# FTS agents: service-to-service authentication to trust-center-agent.
+# tc-agent validates the token and checks the "cd" / "rd" realm role.
+resource "keycloak_openid_client" "core_cd_fts_agent" {
+  realm_id  = var.core_realm_id
+  client_id = "DIZ:${var.name}/cd-fts-agent"
+
+  access_type              = "CONFIDENTIAL"
+  service_accounts_enabled = true
+}
+
+resource "keycloak_openid_client_service_account_realm_role" "core_cd_fts_agent_role" {
+  realm_id                = var.core_realm_id
+  service_account_user_id = keycloak_openid_client.core_cd_fts_agent.service_account_user_id
+  role                    = var.core_cd_role_name
+}
+
+resource "keycloak_openid_client" "core_rd_fts_agent" {
+  realm_id  = var.core_realm_id
+  client_id = "DIZ:${var.name}/rd-fts-agent"
+
+  access_type              = "CONFIDENTIAL"
+  service_accounts_enabled = true
+}
+
+resource "keycloak_openid_client_service_account_realm_role" "core_rd_fts_agent_role" {
+  realm_id                = var.core_realm_id
+  service_account_user_id = keycloak_openid_client.core_rd_fts_agent.service_account_user_id
+  role                    = var.core_rd_role_name
+}

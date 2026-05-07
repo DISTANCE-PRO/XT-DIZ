@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector: {}
+  template:
+    metadata:
+      labels:
+        app.life.uni-leipzig.de/redundancy: none
+        app.life.uni-leipzig.de/service-level: silver
+    spec:
+      enableServiceLinks: false
+      containers:
+      - name: agent
+        image: ghcr.io/medizininformatik-initiative/fts/clinical-domain-agent:5.6.0
+        env:
+        - name: OAUTH2_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: CD_FTS_AGENT_CLIENT_SECRET
+        - name: TC_OAUTH2_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: CD_FTS_TC_CLIENT_SECRET
+        - name: USE_SYSTEM_CA_CERTS
+          value: "true"
+        - name: DIZ_NAME
+          value: "${DIZ_NAME}"
+        ports:
+        - name: http
+          containerPort: 8080
+        volumeMounts:
+        - name: config
+          mountPath: /app/application.yaml
+          subPath: application.yaml
+        - name: projects
+          mountPath: /app/projects
+        - name: ca-certs
+          mountPath: /certificates
+          readOnly: true
+        startupProbe:
+          httpGet: &probe
+            path: /fts/actuator/health
+            port: http
+          failureThreshold: 24
+          periodSeconds: 10
+        readinessProbe:
+          httpGet: *probe
+        livenessProbe:
+          httpGet: *probe
+        resources:
+          requests:
+            cpu: "125m"
+            memory: "1Gi"
+          limits:
+            memory: "1Gi"
+      volumes:
+      - name: config
+        configMap:
+          name: agent-config
+      - name: projects
+        configMap:
+          name: agent-projects
+      - name: ca-certs
+        configMap:
+          name: life-ca-certs
+          items:
+          - key: life-root-ca-2.pem
+            path: life-root-ca-2.crt

@@ -3,6 +3,7 @@ include:
   inputs:
     prune: [ core/v1/Secret, core/v1/ConfigMap,
              apps/v1/StatefulSet, apps/v1/Deployment,
+             batch/v1/CronJob,
              core/v1/Service, networking.k8s.io/v1/Ingress,
              networking.k8s.io/v1/NetworkPolicy ]
     envsubst: [ DIZ_NAME ]

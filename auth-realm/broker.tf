@@ -94,6 +94,22 @@ resource "keycloak_authentication_execution" "auto_link" {
   priority          = 10
 }
 
+# --- Role mappers: propagate core realm roles into per-DIZ realm ---
+
+resource "keycloak_custom_identity_provider_mapper" "cd_admin_role" {
+  realm                    = keycloak_realm.diz.id
+  name                     = "cd-admin-role-mapper"
+  identity_provider_alias  = keycloak_oidc_identity_provider.core.alias
+  identity_provider_mapper = "oidc-advanced-role-idp-mapper"
+
+  extra_config = {
+    syncMode                 = "FORCE"
+    "claims"                 = jsonencode([{ key = "realm_access.roles", value = "cd-admin" }])
+    "are.claim.values.regex" = "false"
+    "role"                   = keycloak_role.cd_admin.name
+  }
+}
+
 # --- Bind custom flows to realm ---
 
 resource "keycloak_authentication_bindings" "diz" {

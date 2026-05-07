@@ -13,15 +13,21 @@ layer.
 
 ## Services
 
-| Service                      | Technology                                                           | Role                                                                    |
-|------------------------------|----------------------------------------------------------------------|-------------------------------------------------------------------------|
-| Clinical Domain FHIR Store   | [Blaze](https://github.com/samply/blaze)                             | Stores original clinical FHIR data, with web frontend                   |
-| Research Domain FHIR Store   | [Blaze](https://github.com/samply/blaze)                             | Stores pseudonymized research data, with web frontend                   |
-| Clinical Domain Agent        | [FTS-next](https://github.com/medizininformatik-initiative/fts-next) | Reads clinical data, coordinates pseudonymization with the trust center |
-| Research Domain Agent        | [FTS-next](https://github.com/medizininformatik-initiative/fts-next) | Receives and stores pseudonymized data                                  |
-| FDPG Mailbox                 | [DSF FHIR Server](https://github.com/datasharingframework)           | Externally reachable endpoint for cross-site FHIR messaging             |
-| FDPG Business Process Engine | [DSF BPE](https://github.com/datasharingframework)                   | Workflow coordination for multi-site processes                          |
-| Rollout Partner Mailbox      | DSF FHIR Server                                                      | Internal message exchange with the rollout partner                      |
+| Service                      | Technology             | Role                                                                    |
+|------------------------------|------------------------|-------------------------------------------------------------------------|
+| Clinical Domain FHIR Store   | [Blaze][blaze]         | Stores original clinical FHIR data, with web frontend                   |
+| Research Domain FHIR Store   | [Blaze][blaze]         | Stores pseudonymized research data, with web frontend                   |
+| Clinical Domain Agent        | [FTSnext][fts]         | Reads clinical data, coordinates pseudonymization with the trust center |
+| Research Domain Agent        | [FTSnext][fts]         | Receives and stores pseudonymized data                                  |
+| FDPG Mailbox                 | [DSF FHIR Server][dsf] | Externally reachable endpoint for cross-site FHIR messaging             |
+| FDPG Business Process Engine | [DSF BPE][dsf]         | Workflow coordination for multi-site processes                          |
+| Rollout Partner Mailbox      | [DSF FHIR Server][dsf] | Internal message exchange with the rollout partner                      |
+
+[blaze]: https://github.com/samply/blaze
+
+[fts]: https://github.com/medizininformatik-initiative/fts-next
+
+[dsf]: https://github.com/datasharingframework
 
 ## Data Flow
 

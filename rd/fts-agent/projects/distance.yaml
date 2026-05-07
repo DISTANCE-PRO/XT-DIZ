@@ -1,0 +1,16 @@
+deidentificator:
+  idMapper:
+    trustCenterAgent:
+      server:
+        baseUrl: https://tc-agent.distance-xt.life.uni-leipzig.local
+        auth:
+          oauth2:
+            registration: core
+
+bundleSender:
+  fhirStore:
+    server:
+      baseUrl: http://rd-hds-backend/fhir
+      auth:
+        oauth2:
+          registration: diz
