@@ -3,7 +3,6 @@ data "keycloak_realm" "distance_xt" {
 }
 
 locals {
-  keycloak_base_url = "https://auth.distance-xt.life.uni-leipzig.local"
   dizs              = toset(yamldecode(file(".gitlab-ci.yml"))[".dizs"])
 }
 
@@ -12,5 +11,5 @@ module "auth_realm" {
   source            = "./auth-realm"
   name              = each.key
   core_realm_id     = data.keycloak_realm.distance_xt.id
-  keycloak_base_url = local.keycloak_base_url
+  keycloak_base_url = var.keycloak_provider_url
 }

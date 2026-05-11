@@ -10,7 +10,7 @@ terraform {
 }
 
 provider "keycloak" {
-  url           = local.keycloak_base_url
+  url           = var.keycloak_provider_url
   client_id     = "terraform"
   client_secret = var.keycloak_provider_client_secret
 }
