@@ -1,3 +1,5 @@
+stages: [ test, plan, deploy ]
+
 include:
 - component: $CI_SERVER_FQDN/util/k8s-ci/kustomize@0.3.1
   inputs:
@@ -12,15 +14,30 @@ include:
     stage: test
 - component: ${CI_SERVER_FQDN}/util/terraform-component/plan@main
   inputs:
-    stage: deploy
+    stage: plan
 
-# Per-DIZ secrets live in a single environment-scoped file-type CI/CD variable
-# `CREDENTIALS_FILE` (one scope per DIZ_NAME). Dotenv format, one KEY=VALUE per
-# line — see README.md for the expected keys.
+# DIZ names, also consumed by terraform
+.dizs: &dizs
+- test-1
+
+.tf/init:
+  variables:
+    TF_VAR_password_seed: "${PASSWORD_SEED}"
+
 .app/apply:
   before_script:
-  - cp "${CREDENTIALS_FILE}" credentials.env
-  - kustomize edit add secret credentials --from-env-file=credentials.env
+  - kustomize edit add secret credentials
+    --from-literal=$(./genpassenv.sh CD_HDS_BACKEND_AUTH_CLIENT_SECRET)
+    --from-literal=$(./genpassenv.sh CD_HDS_FRONTEND_AUTH_CLIENT_SECRET)
+    --from-literal=$(./genpassenv.sh CD_HDS_FRONTEND_AUTH_SECRET)
+    --from-literal=$(./genpassenv.sh RD_HDS_BACKEND_AUTH_CLIENT_SECRET)
+    --from-literal=$(./genpassenv.sh RD_HDS_FRONTEND_AUTH_CLIENT_SECRET)
+    --from-literal=$(./genpassenv.sh RD_HDS_FRONTEND_AUTH_SECRET)
+    --from-literal=$(./genpassenv.sh CD_FTS_AGENT_CLIENT_SECRET)
+    --from-literal=$(./genpassenv.sh CD_FTS_TC_CLIENT_SECRET)
+    --from-literal=$(./genpassenv.sh RD_FTS_AGENT_CLIENT_SECRET)
+    --from-literal=$(./genpassenv.sh RD_FTS_TC_CLIENT_SECRET)
+    --from-literal=$(./genpassenv.sh FTS_SCHEDULER_CLIENT_SECRET)
 
 # Validate with a fixed placeholder so the job doesn't need real DIZ credentials.
 app/validate:
@@ -30,10 +47,6 @@ app/validate:
 app/deploy:test:
   rules:
   - when: never
-
-# DIZ names, also consumed by terraform
-.dizs: &dizs
-- test-1
 
 app/deploy:prod:
   parallel:

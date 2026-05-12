@@ -17,3 +17,11 @@ variable "core_cd_role_name" {
 variable "core_rd_role_name" {
   type = string
 }
+
+variable "password_seed" {
+  type = string
+}
+
+variable "password_seed_version" {
+  type = number
+}

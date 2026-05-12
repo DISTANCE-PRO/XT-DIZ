@@ -29,9 +29,7 @@ spring.security.oauth2.client:
       issuer-uri: https://auth.distance-xt.life.uni-leipzig.local/realms/distance-xt
 
 logging.level:
-  org.springframework.security: DEBUG
-  org.springframework.security.oauth2: TRACE
-  reactor.netty.http.client: DEBUG
+  care.smith.fts: DEBUG
 
 management:
   endpoints:
