@@ -1,7 +1,7 @@
 cohortSelector:
   trustCenterAgent:
     server:
-      baseUrl: https://tc-agent.distance-xt.life.uni-leipzig.local
+      baseUrl: http://tc-agent.distance-xt-trust-center
       auth:
         oauth2:
           registration: core
@@ -26,7 +26,7 @@ deidentificator:
   deidentifhir:
     trustCenterAgent:
       server:
-        baseUrl: https://tc-agent.distance-xt.life.uni-leipzig.local
+        baseUrl: http://tc-agent.distance-xt-trust-center
         auth:
           oauth2:
             registration: core

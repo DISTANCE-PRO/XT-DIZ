@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-trust-center
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: fts
+  policyTypes: [ Egress ]
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: distance-xt-trust-center
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: tc-agent
+    ports:
+    - port: 8080
