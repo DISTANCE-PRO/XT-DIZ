@@ -67,6 +67,13 @@ resource "keycloak_openid_client_service_account_realm_role" "local_cd_fts_agent
   role                    = keycloak_role.cd_agent.name
 }
 
+resource "keycloak_openid_audience_protocol_mapper" "cd_fts_agent_audience" {
+  realm_id                 = keycloak_realm.diz.id
+  client_id                = keycloak_openid_client.local_cd_fts_agent.id
+  name                     = "cd-hds-audience"
+  included_custom_audience = "cd-hds"
+}
+
 resource "keycloak_openid_client" "local_rd_fts_agent" {
   realm_id  = keycloak_realm.diz.id
   client_id = "rd-fts-agent"
@@ -82,6 +89,13 @@ resource "keycloak_openid_client_service_account_realm_role" "local_rd_fts_agent
   realm_id                = keycloak_realm.diz.id
   service_account_user_id = keycloak_openid_client.local_rd_fts_agent.service_account_user_id
   role                    = keycloak_role.cd_agent.name
+}
+
+resource "keycloak_openid_audience_protocol_mapper" "rd_fts_agent_audience" {
+  realm_id                 = keycloak_realm.diz.id
+  client_id                = keycloak_openid_client.local_rd_fts_agent.id
+  name                     = "rd-hds-audience"
+  included_custom_audience = "rd-hds"
 }
 
 # Realm roles for the per-DIZ realm.
