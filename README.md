@@ -56,7 +56,7 @@ This is one of three repositories that make up the DISTANCE:PRO XT platform:
 All OIDC client secrets are derived deterministically from a single `PASSWORD_SEED` CI/CD variable.
 This avoids storing or transmitting individual secret values — only the seed is confidential.
 
-The derivation is `base64(sha256("PASSWORD_SEED:SECRET_NAME"))`, truncated to 32 characters.
+The derivation is `sha256("PASSWORD_SEED:SECRET_NAME")`, truncated to 32 characters.
 
 | Component                        | How the secret is generated                                         |
 |----------------------------------|---------------------------------------------------------------------|
@@ -64,12 +64,6 @@ The derivation is `base64(sha256("PASSWORD_SEED:SECRET_NAME"))`, truncated to 32
 | **CI Pipeline (K8s secrets)**    | `echo -n "${PASSWORD_SEED}:SECRET_NAME" \| sha256sum \| head -c 32` |
 
 Both produce identical values. The shell script is in `genpassenv.sh`.
-
-### Why `base64encode(sha256(...))` instead of `base64sha256(...)`
-
-Terraform's `base64sha256` encodes the raw binary hash, while the shell `sha256sum` command outputs a hex string.
-We use `base64encode(sha256(...))` in Terraform so it base64-encodes the hex string — matching the shell pipeline
-exactly without requiring additional tools (openssl, xxd, python3) in the Alpine-based deployment container.
 
 ## Keycloak Configuration (Terraform)
 
