@@ -12,5 +12,5 @@ variable "password_seed" {
 
 variable "password_seed_version" {
   type    = number
-  default = 2
+  default = 3
 }

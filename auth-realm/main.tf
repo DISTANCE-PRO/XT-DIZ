@@ -12,7 +12,7 @@ resource "keycloak_openid_client" "cd_hds" {
   access_type           = "CONFIDENTIAL"
   standard_flow_enabled = true
 
-  client_secret_wo         = substr(base64encode(sha256("${var.password_seed}:CD_HDS_FRONTEND_AUTH_CLIENT_SECRET")), 0, 32)
+  client_secret_wo         = substr(sha256("${var.password_seed}:CD_HDS_FRONTEND_AUTH_CLIENT_SECRET"), 0, 32)
   client_secret_wo_version = var.password_seed_version
 }
 
@@ -33,7 +33,7 @@ resource "keycloak_openid_client" "rd_hds" {
   access_type           = "CONFIDENTIAL"
   standard_flow_enabled = true
 
-  client_secret_wo         = substr(base64encode(sha256("${var.password_seed}:RD_HDS_FRONTEND_AUTH_CLIENT_SECRET")), 0, 32)
+  client_secret_wo         = substr(sha256("${var.password_seed}:RD_HDS_FRONTEND_AUTH_CLIENT_SECRET"), 0, 32)
   client_secret_wo_version = var.password_seed_version
 }
 
@@ -52,7 +52,7 @@ resource "keycloak_openid_client" "local_cd_fts_agent" {
   access_type              = "CONFIDENTIAL"
   service_accounts_enabled = true
 
-  client_secret_wo         = substr(base64encode(sha256("${var.password_seed}:CD_FTS_AGENT_CLIENT_SECRET")), 0, 32)
+  client_secret_wo         = substr(sha256("${var.password_seed}:CD_FTS_AGENT_CLIENT_SECRET"), 0, 32)
   client_secret_wo_version = var.password_seed_version
 }
 
@@ -81,7 +81,7 @@ resource "keycloak_openid_client" "local_rd_fts_agent" {
   access_type              = "CONFIDENTIAL"
   service_accounts_enabled = true
 
-  client_secret_wo         = substr(base64encode(sha256("${var.password_seed}:RD_FTS_AGENT_CLIENT_SECRET")), 0, 32)
+  client_secret_wo         = substr(sha256("${var.password_seed}:RD_FTS_AGENT_CLIENT_SECRET"), 0, 32)
   client_secret_wo_version = var.password_seed_version
 }
 
@@ -112,7 +112,7 @@ resource "keycloak_openid_client" "fts_scheduler" {
   access_type              = "CONFIDENTIAL"
   service_accounts_enabled = true
 
-  client_secret_wo         = substr(base64encode(sha256("${var.password_seed}:FTS_SCHEDULER_CLIENT_SECRET")), 0, 32)
+  client_secret_wo         = substr(sha256("${var.password_seed}:FTS_SCHEDULER_CLIENT_SECRET"), 0, 32)
   client_secret_wo_version = var.password_seed_version
 }
 

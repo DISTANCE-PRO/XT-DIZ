@@ -60,8 +60,8 @@ The derivation is `base64(sha256("PASSWORD_SEED:SECRET_NAME"))`, truncated to 32
 
 | Component | How the secret is generated |
 |-----------|----------------------------|
-| **Terraform (Keycloak clients)** | `substr(base64encode(sha256("${var.password_seed}:SECRET_NAME")), 0, 32)` |
-| **CI Pipeline (K8s secrets)** | `echo -n "${PASSWORD_SEED}:SECRET_NAME" \| sha256sum \| base64 -w0 \| head -c 32` |
+| **Terraform (Keycloak clients)** | `substr(sha256("${var.password_seed}:SECRET_NAME"), 0, 32)` |
+| **CI Pipeline (K8s secrets)** | `echo -n "${PASSWORD_SEED}:SECRET_NAME" \| sha256sum \| head -c 32` |
 
 Both produce identical values. The shell script is in `genpassenv.sh`.
 
