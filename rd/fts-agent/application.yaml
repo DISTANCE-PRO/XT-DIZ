@@ -1,0 +1,34 @@
+security:
+  endpoints:
+  - path: /api/v2/**
+    role: cd-agent
+  auth:
+    oauth2:
+      issuer: https://auth.distance-xt.life.uni-leipzig.local/realms/diz-${DIZ_NAME}
+
+spring.security.oauth2.client:
+  registration:
+    diz:
+      authorization-grant-type: client_credentials
+      client-id: "rd-fts-agent"
+      client-secret: ${OAUTH2_CLIENT_SECRET}
+      provider: diz
+    core:
+      authorization-grant-type: client_credentials
+      client-id: "DIZ:${DIZ_NAME}/rd-fts-agent"
+      client-secret: ${TC_OAUTH2_CLIENT_SECRET}
+      provider: core
+  provider:
+    diz:
+      issuer-uri: https://auth.distance-xt.life.uni-leipzig.local/realms/diz-${DIZ_NAME}
+    core:
+      issuer-uri: https://auth.distance-xt.life.uni-leipzig.local/realms/distance-xt
+
+logging.level:
+  care.smith.fts: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: [ "health", "info" ]

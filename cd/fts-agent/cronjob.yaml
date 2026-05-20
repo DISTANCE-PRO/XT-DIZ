@@ -1,0 +1,70 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: scheduler
+spec:
+  schedule: "0 3 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        metadata:
+          labels:
+            app.life.uni-leipzig.de/redundancy: none
+            app.life.uni-leipzig.de/service-level: silver
+        spec:
+          restartPolicy: OnFailure
+          enableServiceLinks: false
+          containers:
+          - name: trigger
+            image: docker.io/curlimages/curl:8.20.0@sha256:b3f1fb2a51d923260350d21b8654bbc607164a987e2f7c84a0ac199a67df812a
+            env:
+            - name: REALM_URL
+              value: "https://auth.distance-xt.life.uni-leipzig.local/realms/diz-${DIZ_NAME}"
+            - name: FTS_AGENT_URL
+              value: "http://cd-fts-agent/fts/api/v2"
+            - name: CLIENT_ID
+              value: "fts-scheduler"
+            - name: CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: credentials
+                  key: FTS_SCHEDULER_CLIENT_SECRET
+            - name: CURL_CA_BUNDLE
+              value: /certificates/life-root-ca-2.crt
+            command: [ "/bin/sh", "-ec" ]
+            args:
+            - |
+              echo "Fetch token from ${REALM_URL}"
+              token=$(curl -fsS "${REALM_URL}/protocol/openid-connect/token" \
+                -d grant_type=client_credentials \
+                -d "client_id=${CLIENT_ID}" \
+                -d "client_secret=${CLIENT_SECRET}" \
+                | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
+
+              [ -n "${token}" ] || { echo "Failed to obtain access token"; exit 1; }
+
+              echo "Trigger 'distance' project on ${FTS_AGENT_URL}"
+              curl -fsS -X POST "${FTS_AGENT_URL}/process/distance/start" \
+                -H "Authorization: Bearer ${token}" \
+                -H "Content-Type: application/json"
+            resources:
+              requests:
+                cpu: "50m"
+                memory: "64Mi"
+              limits:
+                memory: "64Mi"
+            volumeMounts:
+            - name: ca-certs
+              mountPath: /certificates
+              readOnly: true
+          volumes:
+          - name: ca-certs
+            configMap:
+              name: life-ca-certs
+              items:
+              - key: life-root-ca-2.pem
+                path: life-root-ca-2.crt

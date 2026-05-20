@@ -1,0 +1,50 @@
+cohortSelector:
+  fhir:
+    server:
+      baseUrl: http://cd-hds-backend/fhir
+      auth:
+        oauth2:
+          registration: diz
+    patientIdentifierSystem: "http://fhir.de/sid/gkv/kvid-10"
+    policySystem: "urn:oid:2.16.840.1.113883.3.1937.777.24.5.3"
+    policies:
+    - 2.16.840.1.113883.3.1937.777.24.5.3.6  # MDAT erheben
+    - 2.16.840.1.113883.3.1937.777.24.5.3.7  # MDAT speichern, verarbeiten
+    #- 2.16.840.1.113883.3.1937.777.24.5.3.8  # MDAT wissenschaftlich nutzen
+    #- 2.16.840.1.113883.3.1937.777.24.5.3.9  # MDAT zusammenfuehren Dritte
+    #- 2.16.840.1.113883.3.1937.777.24.5.3.19 # BIOMAT erheben
+    #- 2.16.840.1.113883.3.1937.777.24.5.3.20 # BIOMAT lagern verarbeiten
+    #- 2.16.840.1.113883.3.1937.777.24.5.3.22 # BIOMAT wissenschaftlich nutzen
+
+dataSelector:
+  everything:
+    fhirServer:
+      baseUrl: http://cd-hds-backend/fhir
+      auth:
+        oauth2:
+          registration: diz
+
+deidentificator:
+  deidentifhir:
+    trustCenterAgent:
+      server:
+        baseUrl: http://tc-agent.distance-xt-trust-center
+        auth:
+          oauth2:
+            registration: core
+      domains:
+        pseudonym: ${DIZ_NAME}
+        salt: ${DIZ_NAME}
+        dateShift: ${DIZ_NAME}
+    maxDateShift: P14D
+    dateShiftPreserve: NONE
+    deidentifhirConfig: /app/projects/distance/deidentifhir/CDtoTransport.profile
+
+bundleSender:
+  researchDomainAgent:
+    server:
+      baseUrl: http://rd-fts-agent
+      auth:
+        oauth2:
+          registration: diz
+    project: distance

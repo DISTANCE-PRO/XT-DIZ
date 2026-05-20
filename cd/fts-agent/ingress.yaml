@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: agent
+spec:
+  rules:
+  - host: cd.${DIZ_NAME}.distance-xt.life.uni-leipzig.local
+    http:
+      paths:
+      - path: /fts
+        pathType: Prefix
+        backend:
+          service:
+            name: agent
+            port:
+              name: http
