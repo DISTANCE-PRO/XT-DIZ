@@ -42,6 +42,8 @@ spec:
           subPath: application.yaml
         - name: projects
           mountPath: /app/projects
+        - name: deidentifhir
+          mountPath: /app/projects/distance/deidentifhir
         - name: ca-certs
           mountPath: /certificates
           readOnly: true
@@ -68,6 +70,9 @@ spec:
       - name: projects
         configMap:
           name: agent-projects
+      - name: deidentifhir
+        configMap:
+          name: agent-deidentifhir
       - name: ca-certs
         configMap:
           name: life-ca-certs

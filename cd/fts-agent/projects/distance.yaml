@@ -38,7 +38,7 @@ deidentificator:
         dateShift: ${DIZ_NAME}
     maxDateShift: P14D
     dateShiftPreserve: NONE
-    deidentifhirConfig: /app/projects/distance/deidentifhir/CDtoTransport.profile
+    deidentifhirConfig: /app/projects/distance/deidentifhir/CDtoTransport.json
 
 bundleSender:
   researchDomainAgent:

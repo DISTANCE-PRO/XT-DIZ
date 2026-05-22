@@ -17,6 +17,9 @@ configMapGenerator:
 - name: agent-projects
   files:
   - projects/distance.yaml
+- name: agent-deidentifhir
+  files:
+  - deidentifhir/CDtoTransport.json
 
 resources:
 - service.yaml
