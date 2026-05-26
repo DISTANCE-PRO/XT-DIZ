@@ -1,4 +1,4 @@
-stages: [ test, plan, deploy ]
+stages: [ prepare, test, plan, deploy ]
 
 include:
 - component: $CI_SERVER_FQDN/util/k8s-ci/kustomize@0.3.1
@@ -20,11 +20,38 @@ include:
 .dizs: &dizs
 - test-1
 
+deidentifhir/merge:
+  stage: prepare
+  image:
+    name: jbangdev/jbang:0.138.0-java-21
+    entrypoint: [ "" ]
+  variables:
+    # Point the JBang cache to the project directory so GitLab can cache it
+    JBANG_CACHE_DIR: "$CI_PROJECT_DIR/.jbang-cache"
+  before_script:
+  - cd cd/fts-agent/deidentifhir
+  script:
+  - jbang resolve.java > CDtoTransport.json
+  cache:
+    key: jbang-deps-cache
+    paths:
+    - .jbang-cache/
+  artifacts:
+    paths: [ "cd/fts-agent/deidentifhir/CDtoTransport.json" ]
+    expire_in: 1 week
+
 .tf/init:
   variables:
     TF_VAR_password_seed: "${PASSWORD_SEED}"
 
+tf/format:
+  needs: [ ]
+
+tf/validate:
+  needs: [ ]
+
 .app/apply:
+  needs: [ deidentifhir/merge ]
   before_script:
   - kustomize edit add secret credentials
     --from-literal=$(./genpassenv.sh CD_HDS_BACKEND_AUTH_CLIENT_SECRET)
@@ -53,9 +80,10 @@ app/deploy:prod:
     matrix:
     - DIZ_NAME: *dizs
   needs:
-    - job: tf/check-changes
-    - job: app/validate
-      artifacts: false
+  - job: tf/check-changes
+  - job: deidentifhir/merge
+  - job: app/validate
+    artifacts: false
   environment:
     # We use a fixed KUBE_CLUSTER from CI/CD variables,
     # so we can use the DIZ name as the environment

@@ -15,8 +15,10 @@ spec:
       enableServiceLinks: false
       containers:
       - name: agent
-        image: ghcr.io/medizininformatik-initiative/fts/clinical-domain-agent:5.6.0
+        image: ghcr.io/medizininformatik-initiative/fts/clinical-domain-agent:pr-1684@sha256:f28cdc771de7ba50214743729b1ffdc33dfb4e483b0e77736759415b2a97c405
         env:
+        - name: TZ
+          value: Europe/Berlin
         - name: OAUTH2_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
@@ -40,6 +42,8 @@ spec:
           subPath: application.yaml
         - name: projects
           mountPath: /app/projects
+        - name: deidentifhir
+          mountPath: /app/projects/distance/deidentifhir
         - name: ca-certs
           mountPath: /certificates
           readOnly: true
@@ -66,6 +70,9 @@ spec:
       - name: projects
         configMap:
           name: agent-projects
+      - name: deidentifhir
+        configMap:
+          name: agent-deidentifhir
       - name: ca-certs
         configMap:
           name: life-ca-certs
