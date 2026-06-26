@@ -1,0 +1,8 @@
+#!/bin/bash
+set -euo pipefail
+
+TF_VAR_keycloak_provider_client_secret="$(vault read -field=client_secret secret/v1/distance/auth/client/terraform)"
+export TF_VAR_keycloak_provider_client_secret
+
+TF_VAR_password_seed="$(vault read -field seed secret/v1/distance/diz/test-1/password_seed)"
+export TF_VAR_password_seed
