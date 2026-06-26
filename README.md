@@ -43,6 +43,8 @@ layer.
 One instance of this repository is deployed per rollout partner. Site-specific configuration (hostnames,
 secrets) is injected at deployment time via CI/CD variables.
 
+To onboard a new DIZ, see [docs/adding-a-diz.md](docs/adding-a-diz.md).
+
 ## Architecture Context
 
 This is one of three repositories that make up the DISTANCE:PRO XT platform:

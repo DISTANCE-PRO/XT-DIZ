@@ -16,7 +16,9 @@ include:
   inputs:
     stage: plan
 
-# DIZ names, also consumed by terraform
+# DIZ names, single source of truth. Consumed by the app/deploy:prod matrix
+# below, by Terraform (main.tf), and by .gitlab-ci/genseeds.sh. Onboard a new
+# DIZ by appending its slug here and defining PASSWORD_SEED_<DIZ>.
 .dizs: &dizs
 - test-1
 
@@ -41,8 +43,12 @@ deidentifhir/merge:
     expire_in: 1 week
 
 .tf/init:
-  variables:
-    TF_VAR_password_seed: "${PASSWORD_SEED}"
+  # Build the per-DIZ TF_VAR_password_seeds map. genseeds.sh reads the DIZ
+  # list from the .dizs anchor in this file and looks up each
+  # PASSWORD_SEED_<DIZ> CI variable.
+  before_script:
+  - apk add --no-cache -q yq jq bash
+  - export TF_VAR_password_seeds="$(bash ./.gitlab-ci/genseeds.sh)"
 
 tf/format:
   needs: [ ]
@@ -52,14 +58,13 @@ tf/validate:
 
 .app/apply:
   needs: [ deidentifhir/merge ]
-  variables:
   before_script:
   - apk add glab openssl
   - ./.gitlab-ci/generate-process-env.sh
   - ./.gitlab-ci/download-secrets.sh "$DIZ_NAME" .secrets/certs
   - ./.gitlab-ci/generate-thumbprints.sh .secrets/certs .secrets/thumbprints
   - ./.gitlab-ci/create-credentials-env.sh .secrets/credentials.env
-  - kustomize edit add secret credentials 
+  - kustomize edit add secret credentials
     --from-env-file=.secrets/credentials.env
   - kustomize edit add secret fdpg-dsf-creds
     --from-file=cert=.secrets/certs/fdpg-dsf-client-cert.pem
@@ -68,7 +73,6 @@ tf/validate:
     --from-file=cert=.secrets/certs/rp-dsf-client-cert.pem
     --from-file=pkey=.secrets/certs/rp-dsf-private-key.pem
     --from-file=thumbprints=.secrets/thumbprints
-
 
 # Validate with a fixed placeholder DIZ and its matching secure files.
 app/validate:
