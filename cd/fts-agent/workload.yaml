@@ -15,7 +15,7 @@ spec:
       enableServiceLinks: false
       containers:
       - name: agent
-        image: ghcr.io/medizininformatik-initiative/fts/clinical-domain-agent:pr-1684@sha256:f28cdc771de7ba50214743729b1ffdc33dfb4e483b0e77736759415b2a97c405
+        image: ghcr.io/medizininformatik-initiative/fts/clinical-domain-agent:latest@sha256:e10740a753439edb9ddc6c44fd0929d934e92526e2a66cf5a9351be3499c2029
         env:
         - name: TZ
           value: Europe/Berlin

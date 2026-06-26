@@ -15,7 +15,7 @@ spec:
       enableServiceLinks: false
       containers:
       - name: agent
-        image: ghcr.io/medizininformatik-initiative/fts/research-domain-agent:5.6.0
+        image: ghcr.io/medizininformatik-initiative/fts/research-domain-agent:latest@sha256:20fa9d2d599847edebd9ad6c38870af8b8f0b8473afd5de90b575eb36cc22a9b
         env:
         - name: OAUTH2_CLIENT_SECRET
           valueFrom:
