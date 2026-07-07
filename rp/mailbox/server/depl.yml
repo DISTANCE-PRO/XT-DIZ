@@ -1,0 +1,129 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rp-mailbox-server
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector: {}
+  template:
+    metadata:
+      labels:
+        app.life.uni-leipzig.de/redundancy: none
+        app.life.uni-leipzig.de/service-level: silver
+    spec:
+      enableServiceLinks: false
+      securityContext:
+        fsGroup: 2101
+        fsGroupChangePolicy: "OnRootMismatch"
+        runAsGroup: 2101
+        runAsUser: 2101
+      containers:
+      - name: mailbox
+        image: ghcr.io/datasharingframework/fhir:2.1.0
+        ports:
+        - name: http
+          containerPort: 8080
+        - name: health
+          containerPort: 10000
+        env:
+        - name: DEV_DSF_SERVER_STATUS_HOST
+          value: "0.0.0.0"
+        - name: DEV_DSF_SERVER_STATUS_PORT
+          value: "10000"
+        - name: DEV_DSF_FHIR_DB_LIQUIBASE_USERNAME
+          value: liquibase_user
+        - name: DEV_DSF_FHIR_DB_LIQUIBASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: RP_DSF_MAILBOX_DB_LIQUIBASE_PASSWORD
+        - name: DEV_DSF_FHIR_DB_USER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: RP_DSF_MAILBOX_DB_USER_PASSWORD
+        - name: DEV_DSF_FHIR_DB_USER_PERMANENT_DELETE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: RP_DSF_MAILBOX_DB_USER_PERMANENT_DELETE_PASSWORD
+        - name: DEV_DSF_FHIR_DB_URL
+          value: "jdbc:postgresql://rp-mailbox-db/fhir"
+        - name: DEV_DSF_FHIR_SERVER_BASE_URL
+          value: "https://${DIZ_NAME}.distance-xt.life.uni-leipzig.de/fhir"
+        - name: DEV_DSF_FHIR_SERVER_ORGANIZATION_IDENTIFIER_VALUE
+          value: "${DIZ_NAME}.distance-xt.life.uni-leipzig.de"
+        - name: DEV_DSF_SERVER_AUTH_CLIENT_CERTIFICATE_HEADER
+          value: "X-SSL-Client-Cert"
+        - name: DEV_DSF_FHIR_CLIENT_CERTIFICATE
+          value: "/run/secrets/creds/cert.pem"
+        - name: DEV_DSF_FHIR_CLIENT_CERTIFICATE_PRIVATE_KEY
+          value: "/run/secrets/creds/key.pem"
+        - name: DEV_DSF_FHIR_CLIENT_CERTIFICATE_PRIVATE_KEY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: RP_PRIVATE_KEY_PASSWORD
+        - name: DEV_DSF_SERVER_AUTH_OIDC_AUTHORIZATION_CODE_FLOW
+          value: "true"
+        - name: DEV_DSF_SERVER_AUTH_OIDC_BACK_CHANNEL_LOGOUT
+          value: "true"
+        - name: DEV_DSF_SERVER_AUTH_OIDC_PROVIDER_REALM_BASE_URL
+          value: "https://auth.distance-xt.life.uni-leipzig.local/realms/diz-${DIZ_NAME}"
+        - name: DEV_DSF_SERVER_AUTH_OIDC_PROVIDER_CLIENT_TRUST_SERVER_CERTIFICATE_CAS
+          value: "/run/secrets/life-ca-certs/life-root-ca-2.pem"
+        - name: DEV_DSF_SERVER_AUTH_OIDC_CLIENT_ID
+          value: rp-dsf-mailbox
+        - name: DEV_DSF_SERVER_AUTH_OIDC_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: RP_DSF_MAILBOX_AUTH_CLIENT_SECRET
+        - name: DEV_DSF_SERVER_AUTH_OIDC_BEARER_TOKEN
+          value: "true"
+        - name: DEV_DSF_FHIR_SERVER_ROLECONFIG
+          value: |
+            - token-role: dsfAdmin
+              dsf-role:
+              - DSF_ADMIN
+              practitioner-role:
+              - http://dsf.dev/fhir/CodeSystem/practitioner-role|DSF_ADMIN
+        volumeMounts:
+        - name: ca-certs
+          mountPath: /run/secrets/life-ca-certs
+          readOnly: true
+        - name: dsf-creds
+          mountPath: /run/secrets/creds
+          readOnly: true
+        startupProbe:
+          httpGet: &probe
+            path: /fhir/status
+            port: health
+          failureThreshold: 24
+          periodSeconds: 10
+        readinessProbe:
+          httpGet: *probe
+        livenessProbe:
+          httpGet: *probe
+        resources:
+          requests:
+            cpu: "125m"
+            memory: "2Gi"
+          limits:
+            memory: "2Gi"
+      volumes:
+      - name: dsf-creds
+        secret:
+          secretName: rp-dsf-creds
+          items:
+          - key: cert
+            path: cert.pem
+          - key: pkey
+            path: key.pem
+      - name: ca-certs
+        configMap:
+          name: life-ca-certs
+          items:
+          - key: life-root-ca-2.pem
+            path: life-root-ca-2.pem

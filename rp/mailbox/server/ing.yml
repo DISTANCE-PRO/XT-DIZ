@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rp-mailbox-server
+spec:
+  rules:
+  # Public zone (.de) — external-facing DIZ endpoint
+  - host: ${DIZ_NAME}.distance-xt.life.uni-leipzig.de
+    http:
+      paths:
+      - path: /rp/fhir
+        pathType: Prefix
+        backend:
+          service:
+            name: rp-mailbox-server
+            port:
+              name: http

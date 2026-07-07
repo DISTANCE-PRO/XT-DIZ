@@ -1,0 +1,15 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: fdpg-mailbox-allow-mailboxes
+spec:
+  podSelector:
+    matchLabels: {}
+  policyTypes: [ Egress ]
+  egress:
+    # access rp mailbox in allow-list
+  - to:
+    - ipBlock:
+        cidr: 139.18.82.225/32 # public-lb
+    ports:
+    - port: 443

@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: fdpg-bpe-allow-backend-services
+spec:
+  podSelector: { }
+  policyTypes: [ Egress ]
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 139.18.82.225/32 # mailboxes via public-lb
+    - ipBlock:
+        cidr: 172.18.50.204/32 # FHIR store via prod-lb
+    ports:
+    - port: 443
+  - to: # the internet for downloading process plugins
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 10.0.0.0/8          # Internal Cluster/VPC IPs (RFC 1918)
+        - 172.16.0.0/12       # Pod/Service/Docker networks (RFC 1918)
+        - 192.168.0.0/16      # Office/LAN networks (RFC 1918)
+        - 100.64.0.0/10       # Carrier-Grade NAT / Mesh overlays (RFC 6598)
+        - 169.254.169.254/32  # Cloud Provider Metadata (AWS/GCP/Azure)

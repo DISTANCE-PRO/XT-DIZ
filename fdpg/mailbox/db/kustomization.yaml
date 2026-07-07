@@ -7,4 +7,6 @@ labels:
   pairs:
     app.kubernetes.io/component: db
 
-resources: []
+resources:
+- sts.yml
+- svc.yml

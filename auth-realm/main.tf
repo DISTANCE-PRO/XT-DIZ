@@ -121,3 +121,63 @@ resource "keycloak_openid_client_service_account_realm_role" "fts_scheduler_cd_a
   service_account_user_id = keycloak_openid_client.fts_scheduler.service_account_user_id
   role                    = keycloak_role.cd_admin.name
 }
+
+# Client for DSF BPE process plugins to access rd hds
+resource "keycloak_openid_client" "fdpg_dsf_bpe_rd_hds" {
+  realm_id  = keycloak_realm.diz.id
+  client_id = "fdpg-dsf-bpe-rd-hds"
+
+  access_type              = "CONFIDENTIAL"
+  service_accounts_enabled = true
+
+  client_secret_wo         = substr(sha256("${var.password_seed}:FDPG_DSF_BPE_RD_HDS_CLIENT_SECRET"), 0, 32)
+  client_secret_wo_version = var.password_seed_version
+}
+
+# Add audience rd-hds to access tokens for client fdpg-dsf-bpe-rd-hds
+resource "keycloak_openid_audience_protocol_mapper" "fdpg_dsf_bpe_rd_hds_audience" {
+  realm_id                 = keycloak_realm.diz.id
+  client_id                = keycloak_openid_client.fdpg_dsf_bpe_rd_hds.id
+  name                     = "fdpg-dsf-bpe-rd-hds-audience"
+  included_custom_audience = "rd-hds"
+}
+
+# Clients for authenticating DSF mailbox local users (DSF term "Practitioner")
+resource "keycloak_openid_client" "fdpg_dsf_mailbox" {
+  realm_id  = keycloak_realm.diz.id
+  client_id = "fdpg-dsf-mailbox"
+
+  root_url            = "https://${var.name}.distance-xt.life.uni-leipzig.de/fhir"
+  valid_redirect_uris = ["https://${var.name}.distance-xt.life.uni-leipzig.de/fhir/*"]
+
+  access_type           = "CONFIDENTIAL"
+  standard_flow_enabled = true
+
+  client_secret_wo         = substr(sha256("${var.password_seed}:FDPG_DSF_MAILBOX_CLIENT_SECRET"), 0, 32)
+  client_secret_wo_version = var.password_seed_version
+}
+
+resource "keycloak_openid_client" "rp_dsf_mailbox" {
+  realm_id  = keycloak_realm.diz.id
+  client_id = "rp-dsf-mailbox"
+
+  root_url            = "https://${var.name}.distance-xt.life.uni-leipzig.de/rp/fhir"
+  valid_redirect_uris = ["https://${var.name}.distance-xt.life.uni-leipzig.de/rp/fhir/*"]
+
+  access_type           = "CONFIDENTIAL"
+  standard_flow_enabled = true
+
+  client_secret_wo         = substr(sha256("${var.password_seed}:RP_DSF_MAILBOX_CLIENT_SECRET"), 0, 32)
+  client_secret_wo_version = var.password_seed_version
+}
+
+# Realm Roles for DSF mailbox admin
+resource "keycloak_role" "fdpg_dsf_mailbox_admin" {
+  realm_id = keycloak_realm.diz.id
+  name     = "fdpg-dsf-mailbox-admin"
+}
+
+resource "keycloak_role" "rp_dsf_mailbox_admin" {
+  realm_id = keycloak_realm.diz.id
+  name     = "rp-dsf-mailbox-admin"
+}

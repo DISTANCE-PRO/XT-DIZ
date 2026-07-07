@@ -7,4 +7,17 @@ labels:
   pairs:
     app.kubernetes.io/component: server
 
-resources: []
+resources:
+- depl.yml
+- svc.yml
+- ing.yml
+- netpol.yaml
+
+configMapGenerator:
+- name: bpe-download-plugins-script
+  files:
+  - download-plugins.sh
+  - process-plugins.yaml
+- name: bpe-process-config
+  envs:
+  - process-excluded.env
