@@ -33,6 +33,6 @@ module "auth_realm" {
   keycloak_base_url     = var.keycloak_provider_url
   core_cd_role_name     = keycloak_role.core_cd.name
   core_rd_role_name     = keycloak_role.core_rd.name
-  password_seed         = var.password_seed
+  password_seed         = var.password_seeds[each.key]
   password_seed_version = var.password_seed_version
 }

@@ -1,3 +1,7 @@
 /.terraform
 credentials.env
 AGENTS.md
+
+# CI-generated artifacts
+/.secrets/
+/fdpg/bpe/server/process-excluded.env

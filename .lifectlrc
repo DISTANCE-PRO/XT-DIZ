@@ -1,8 +1,22 @@
 #!/bin/bash
 set -euo pipefail
 
+# Reads the DIZ list from the .dizs anchor in .gitlab-ci.yml (the single
+# source of truth) and loads each DIZ's password seed from Vault into the
+# TF_VAR_password_seeds map. Requires yq, jq and vault on PATH.
+for tool in yq jq vault; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+        echo "Error: '$tool' is required by .lifectlrc" >&2
+        exit 1
+    fi
+done
+
 TF_VAR_keycloak_provider_client_secret="$(vault read -field=client_secret secret/v1/distance/auth/client/terraform)"
 export TF_VAR_keycloak_provider_client_secret
 
-TF_VAR_password_seed="$(vault read -field seed secret/v1/distance/diz/test-1/password_seed)"
-export TF_VAR_password_seed
+TF_VAR_password_seeds="{}"
+for diz in $(yq -r '.".dizs"[]' .gitlab-ci.yml); do
+    seed=$(vault read -field=seed "secret/v1/distance/diz/${diz}/password_seed")
+    TF_VAR_password_seeds=$(jq -c --arg key "${diz}" --arg val "${seed}" '.[$key] = $val' <<< "$TF_VAR_password_seeds")
+done
+export TF_VAR_password_seeds
