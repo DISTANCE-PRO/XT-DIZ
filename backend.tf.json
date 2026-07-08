@@ -8,9 +8,7 @@
           "s3": "https://s3.life.uni-leipzig.local/"
         },
         "skip_credentials_validation": true,
-        "skip_requesting_account_id": true,
-        "profile": "minio-terraform",
-        "region": "eu-central-1"
+        "skip_requesting_account_id": true
       }
     }
   }
