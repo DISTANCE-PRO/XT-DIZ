@@ -25,7 +25,7 @@ include:
 deidentifhir/merge:
   stage: prepare
   image:
-    name: jbangdev/jbang:0.138.0-java-21
+    name: jbangdev/jbang:0.139.3-java-21@sha256:9ac594d98e721e32f197f37e53eedce4b68071463caecf72ab8a8f86f6416a57
     entrypoint: [ "" ]
   variables:
     # Point the JBang cache to the project directory so GitLab can cache it
