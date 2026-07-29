@@ -1,7 +1,7 @@
 stages: [ prepare, test, plan, deploy ]
 
 include:
-- component: $CI_SERVER_FQDN/util/k8s-ci/kustomize@0.3.1
+- component: $CI_SERVER_FQDN/util/k8s-ci/kustomize@1
   inputs:
     prune: [ core/v1/Secret, core/v1/ConfigMap,
              apps/v1/StatefulSet, apps/v1/Deployment,
@@ -16,7 +16,7 @@ include:
   inputs:
     stage: plan
 
-# DIZ names, single source of truth. Consumed by the app/deploy:prod matrix
+# DIZ names, single source of truth. Consumed by the kube/deploy:prod matrix
 # below, by Terraform (main.tf), and by .gitlab-ci/genseeds.sh. Onboard a new
 # DIZ by appending its slug here and defining PASSWORD_SEED_<DIZ>.
 .dizs: &dizs
@@ -56,10 +56,12 @@ tf/format:
 tf/validate:
   needs: [ ]
 
-.app/apply:
+.kube/apply:
   needs: [ deidentifhir/merge ]
+  variables:
+    GLAB_VERSION: "1.100.0-r0"
   before_script:
-  - apk add glab openssl
+  - apk add --no-cache -q "glab=${GLAB_VERSION}" openssl
   - ./.gitlab-ci/generate-process-env.sh
   - ./.gitlab-ci/download-secrets.sh "$DIZ_NAME" .secrets/certs
   - ./.gitlab-ci/generate-thumbprints.sh .secrets/certs .secrets/thumbprints
@@ -75,22 +77,22 @@ tf/validate:
     --from-file=thumbprints=.secrets/thumbprints
 
 # Validate with a fixed placeholder DIZ and its matching secure files.
-app/validate:
+kube/validate:
   variables:
     DIZ_NAME: test-1
 
-app/deploy:test:
+kube/deploy:test:
   rules:
   - when: never
 
-app/deploy:prod:
+kube/deploy:prod:
   parallel:
     matrix:
     - DIZ_NAME: *dizs
   needs:
   - job: tf/check-changes
   - job: deidentifhir/merge
-  - job: app/validate
+  - job: kube/validate
     artifacts: false
   environment:
     # We use a fixed KUBE_CLUSTER from CI/CD variables,
